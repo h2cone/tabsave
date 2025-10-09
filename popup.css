@@ -63,6 +63,12 @@ button:disabled {
 	cursor: not-allowed;
 }
 
+.divider {
+	height: 1px;
+	background: linear-gradient(90deg, transparent, #ddd 20%, #ddd 80%, transparent);
+	margin: 15px 0;
+}
+
 .status {
 	margin-top: 15px;
 	padding: 10px;

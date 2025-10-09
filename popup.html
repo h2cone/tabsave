@@ -9,8 +9,11 @@
 	<body>
 		<div class="container">
 			<h1>Save Tab URLs</h1>
-			<p class="info">Click the button to save all tab URLs to a txt file</p>
+			<p class="info">Save or import tab URLs from a txt file</p>
 			<button id="saveBtn">Save All Tab URLs</button>
+			<div class="divider"></div>
+			<input type="file" id="fileInput" accept=".txt" style="display: none;">
+			<button id="importBtn">Import Tab URLs</button>
 			<div id="status" class="status"></div>
 		</div>
 		<script src="popup.js"></script>

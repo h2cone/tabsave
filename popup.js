@@ -1,3 +1,4 @@
+// Save button handler
 document.getElementById("saveBtn").addEventListener("click", async () => {
 	const statusDiv = document.getElementById("status");
 	const saveBtn = document.getElementById("saveBtn");
@@ -62,3 +63,76 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
 		saveBtn.disabled = false;
 	}
 });
+
+// Import button handler
+document.getElementById("importBtn").addEventListener("click", () => {
+	document.getElementById("fileInput").click();
+});
+
+// File input handler
+document.getElementById("fileInput").addEventListener("change", async (event) => {
+	const statusDiv = document.getElementById("status");
+	const importBtn = document.getElementById("importBtn");
+	const file = event.target.files[0];
+
+	if (!file) {
+		return;
+	}
+
+	try {
+		// Disable button to prevent duplicate clicks
+		importBtn.disabled = true;
+		statusDiv.textContent = "Reading file...";
+		statusDiv.className = "status info";
+
+		// Read file content
+		const text = await file.text();
+
+		// Parse URLs from file
+		const urls = parseURLsFromText(text);
+
+		if (urls.length === 0) {
+			statusDiv.textContent = "✗ No valid URLs found in file";
+			statusDiv.className = "status error";
+			return;
+		}
+
+		// Display progress
+		statusDiv.textContent = `Opening ${urls.length} tabs...`;
+
+		// Open all URLs in new tabs
+		for (const url of urls) {
+			await chrome.tabs.create({ url, active: false });
+		}
+
+		// Display success message
+		statusDiv.textContent = `✓ Successfully opened ${urls.length} tabs!`;
+		statusDiv.className = "status success";
+
+		// Clear file input
+		event.target.value = "";
+	} catch (error) {
+		console.error("Import failed:", error);
+		statusDiv.textContent = `✗ Import failed: ${error.message}`;
+		statusDiv.className = "status error";
+	} finally {
+		// Re-enable button
+		importBtn.disabled = false;
+	}
+});
+
+// Parse URLs from exported text file
+function parseURLsFromText(text) {
+	const urls = [];
+	const lines = text.split("\n");
+
+	for (const line of lines) {
+		const trimmedLine = line.trim();
+		// Match lines that start with http:// or https://
+		if (trimmedLine.startsWith("http://") || trimmedLine.startsWith("https://")) {
+			urls.push(trimmedLine);
+		}
+	}
+
+	return urls;
+}
