@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Chrome extension that saves all open tab URLs to a txt file. The extension is vanilla JavaScript with no build step required.
+This is a Chrome extension that saves and imports tab URLs to/from txt files. The extension is vanilla JavaScript with no build step required.
 
 ## Development Commands
 
@@ -16,6 +16,11 @@ npx @biomejs/biome format --write .
 ### Code Linting
 ```bash
 npx @biomejs/biome check --write .
+```
+
+### Setup
+```bash
+npm install  # Install local tooling (Biome formatter)
 ```
 
 ## Testing the Extension
@@ -41,18 +46,26 @@ This creates `icon16.png`, `icon48.png`, and `icon128.png` with a gradient backg
 ## Architecture
 
 **Core Files:**
-- `manifest.json` - Chrome extension configuration with icon paths
-- `manifest_no_icons.json` - Alternative manifest without icon configuration (use if icons not available)
-- `popup.html` - Extension popup UI
-- `popup.js` - Main logic: fetches tabs via Chrome API, formats data, triggers download
+- `manifest.json` - Chrome extension configuration with icon paths and permissions
+- `manifest_no_icons.json` - Keep in sync with `manifest.json` for iconless builds
+- `popup.html` - Extension popup UI with save/import buttons
+- `popup.js` - Main logic: save tabs (export) and import tabs (restore)
 - `popup.css` - Styling with purple gradient theme
+- `generate_icons.py` - Icon generation script (requires `.venv` with Pillow)
 
-**Data Flow:**
-1. User clicks button in `popup.html`
-2. `popup.js` calls `chrome.tabs.query({})` to get all tabs
+**Save/Export Flow:**
+1. User clicks "Save All Tab URLs" button
+2. `chrome.tabs.query({})` fetches all open tabs
 3. Formats output with timestamp, tab count, and tab list (title + URL)
 4. Creates a Blob and triggers download via temporary `<a>` element
 5. Filename format: `tabs_YYYYMMDD_HHMMSS.txt`
+
+**Import/Restore Flow:**
+1. User clicks "Import Tab URLs" button
+2. Hidden file input triggers file selection dialog
+3. `parseURLsFromText()` extracts URLs (lines starting with `http://` or `https://`)
+4. `chrome.tabs.create()` opens each URL in a new background tab
+5. Parser ignores metadata lines (timestamp, titles, separators) for robustness
 
 **Output Format:**
 ```
@@ -68,6 +81,28 @@ https://example.com/url1
 https://example.com/url2
 ```
 
+## Coding Conventions
+
+**JavaScript:**
+- Modern ES modules with `const`/`let`, 2-space indentation
+- Always run `npx @biomejs/biome format --write .` before committing
+
+**CSS:**
+- BEM-like class names (e.g., `popup__button`)
+- Alphabetize property declarations where practical
+
+**HTML:**
+- Attribute order: structural (id, class) before styling hooks
+
+**Manifest Sync:**
+- Keep `manifest.json` and `manifest_no_icons.json` in sync when adding permissions or capabilities
+
 ## Language & Localization
 
 All code, comments, and UI text are in English. The output timestamp uses `en-US` locale formatting.
+
+## Release Process
+
+Before packaging for Chrome Web Store:
+1. Bump `version` in both `manifest.json` and `manifest_no_icons.json`
+2. Exclude `.venv/`, `node_modules/` from release archive
